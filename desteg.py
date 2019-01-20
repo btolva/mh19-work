@@ -6,6 +6,11 @@ import PIL
 from PIL import Image
 import matplotlib
 import matplotlib.pyplot as plt
+from scipy.fftpack import fft, ifft, fft2
+import numpy
+
+have_matplots = False
+have_imshows = False
 
 fn = "r11-picture image.png"
 im = Image.open(fn)
@@ -37,33 +42,74 @@ def hard_slice(pixel):
     return 255
 
 imhs = im.point(hard_slice)
+if have_imshows:
+    imhs.show()
 # iterator over flattened pixels
 imhsl = list(imhs.getdata())
-from scipy.fftpack import fft, ifft
+imhsd = numpy.array(imhs)
+imhsdf = imhsd.flatten()
 
-def accumulate_bits(pixels):
+# scan through slices:
+if 1:
+    for i in range(23 * 28):
+        a = i // 23
+        b = i % 23
+        imhsds = imhsd[b::23,a::28]
+        plt.clf()
+        plt.imshow(imhsds)
+        plt.ion()
+        plt.show()
+        plt.pause(.001)
+
+# shrink in one dimension...
+if 1:
+    for i in range(w):
+        nw = w-i
+        nh = (w*h) // (w-i)
+
+        imrs = imhsdf[:nw*nh].reshape(nw, nh)
+        plt.clf()
+        plt.imshow(imrs)
+        plt.ion()
+        plt.show()
+        plt.pause(.001)
 
 
-imhslf = fft(imhsl)
+print(imhsl[0:128])
+#def accumulate_bits(pixels):
 
-#im3.show()
+
+imhslf = numpy.abs(fft(imhsl))
+imhsdf = numpy.abs(fft2(imhsd))
+
+imhsdf[0][0] = 0
+if have_imshows:
+    plt.imshow(imhsdf)
+    plt.show()
+
+if have_imshows:
+    pass
+    #im3.show()
 
 hi = im.histogram()
 
 
-plt.plot(imhslf[:25])
-plt.show()
+if have_matplots:
+    plt.plot(imhslf[:25])
+    plt.show()
 
-for thing in imhsl:
+#for thing in imhsl:
 
 
 #ehi = list(enumerate(hi))
 ehi = list(hi)
 
 ehi[0] = 0
-plt.bar(range(len(ehi)), ehi)
+if have_matplots:
+    plt.bar(range(len(ehi)), ehi)
 print(ehi)
-plt.show()
+if have_matplots:
+    plt.show()
 
 def stride_image(ws, hs):
     ims = Image.new("L", (w//ws, h//hs))
