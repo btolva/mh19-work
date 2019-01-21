@@ -25,8 +25,8 @@ if mpzv == 2: from gmpy2 import gcd
 
 def isqrt(n):
     if n == 0: return 0
-    x, y = n, (n + 1) / 2
-    while y < x: x, y = y, (y + n/y) / 2
+    x, y = n, (n + 1) // 2
+    while y < x: x, y = y, (y + n//y) // 2
     return x
 if mpzv == 1: from gmpy import sqrt as isqrt
 if mpzv == 2: from gmpy2 import isqrt
@@ -37,7 +37,7 @@ def introot(n, r=2):
     if r == 2: return isqrt(n)
     lower, upper = 0, n
     while lower != upper - 1:
-        mid = (lower + upper) / 2
+        mid = (lower + upper) // 2
         m = mid**r
         if   m == n: return  mid
         elif m <  n: lower = mid
@@ -98,7 +98,7 @@ def nextprime(n):
 def pfactor(n):
     s, d, q = 0, n-1, 2
     while not d & q - 1: s, q = s+1, q*2
-    return s, d / (q / 2)
+    return s, d // (q // 2)
 
 def sprp(n, a, s=None, d=None):
     if n%2 == 0: return False
@@ -119,7 +119,7 @@ def jacobi(a, p):
     a, t = a%p, 1
     while a != 0:
         while not a & 1:
-            a /= 2
+            a = a // 2
             if p & 7 in (3, 5): t *= -1
         a, p = p, a
         if (a & 3 == 3) and (p & 3) == 3: t *= -1
@@ -136,8 +136,8 @@ def chain(n, u1, v1, u2, v2, d, q, m): # Used in SLPRP.  TODO: figure out what t
             u1, v1 = u2*v1+u1*v2, v2*v1+u2*u1*d
             if u1%2 == 1: u1 = u1 + n
             if v1%2 == 1: v1 = v1 + n
-            u1, v1, k = (u1/2)%n, (v1/2)%n, (q*k)%n
-        m /= 2
+            u1, v1, k = (u1//2)%n, (v1//2)%n, (q*k)%n
+        m = m//2
     return u1, v1, k
 
 def isprime(n, tb=(3,5,7,11), eb=(2,), mrb=()):      # TODO: more streamlining
@@ -155,7 +155,7 @@ def isprime(n, tb=(3,5,7,11), eb=(2,), mrb=()):      # TODO: more streamlining
         if b >= n: continue
         if not pow(b, n-1, n) == 1: return False
         r = n - 1
-        while r%2 == 0: r /= 2
+        while r%2 == 0: r = r // 2
         c = pow(b, r, n)
         if c == 1: continue
         while c != 1 and c != n-1: c = pow(c, 2, n)
@@ -171,12 +171,12 @@ def isprime(n, tb=(3,5,7,11), eb=(2,), mrb=()):      # TODO: more streamlining
                 p, q = 0, 0
                 break
             if jacobi(d, n) == -1:
-                p, q = 1, (1 - d) / 4
+                p, q = 1, (1 - d) // 4
                 break
-            d = -d - 2*d/abs(d)
+            d = -d - 2*d//abs(d)
         if p == 0: return n == d
         s, t = pfactor(n + 2)
-        u, v, u2, v2, m = 1, p, 1, p, t/2
+        u, v, u2, v2, m = 1, p, 1, p, t//2
         k = q
         while m > 0:
             u2, v2, q = (u2*v2)%n, (v2*v2-2*q)%n, (q*q)%n
@@ -184,8 +184,8 @@ def isprime(n, tb=(3,5,7,11), eb=(2,), mrb=()):      # TODO: more streamlining
                 u, v = u2*v+u*v2, v2*v+u2*u*d
                 if u%2 == 1: u += n
                 if v%2 == 1: v += n
-                u, v, k = (u/2)%n, (v/2)%n, (q*k)%n
-            m /= 2
+                u, v, k = (u//2)%n, (v//2)%n, (q*k)%n
+            m = m//2
         if (u == 0) or (v == 0): return True
         for i in range(1, s):
             v, k = (v*v-2*k)%n, (k*k)%n
@@ -206,7 +206,7 @@ if mpzv == 2: from gmpy2 import is_bpsw_prp as isprime
 def ilog(x, b): # greatest integer l such that b**l <= x.
     l = 0
     while x >= b:
-        x /= b
+        x = x//b
         l += 1
     return l
 
@@ -298,12 +298,12 @@ def ecmul(m, p, A, n): # multiply point p by m on curve A modulo n
         if m == 2: return q
         b = 1
         while b < m: b *= 2
-        b /= 4
+        b = b//4
         r = p
         while b:
             if m&b: q, r = ecdub(q, A, n), ecadd(q, r, p, n)
             else:   q, r = ecadd(r, q, p, n), ecdub(r, A, n)
-            b /= 2
+            b = b//2
         return r
 def ecm(n, B1=10, B2=20):       # TODO: Determine the best defaults for B1 and B2 and the best way to increment them and iters
     # "Modern" ECM using Montgomery curves and an algorithm analogous to the two-phase variant of Pollard's p-1 method
@@ -402,7 +402,7 @@ def mod_sqrt(n, p):
 # modular inverse of a mod m
 def modinv(a, m):
     a, x, u = a%m, 0, 1
-    while a: x, u, m, a = u, x - (m/a)*u, a, m%a
+    while a: x, u, m, a = u, x - (m//a)*u, a, m%a
     return x
 
 # Multiple Polynomial Quadratic Sieve
@@ -450,11 +450,11 @@ def mpqs(n):
             # and add a lot of unnecessary entries to the table
             # instead, fudge the threshold down a bit, assuming ~1/4 of them pass
             min_prime = mpz(thresh*3)
-            fudge = sum(log_p[i] for i,p in enumerate(prime) if p < min_prime)/4
+            fudge = sum(log_p[i] for i,p in enumerate(prime) if p < min_prime)//4
             thresh -= fudge
             
             smooth, used_prime, partial = [], set(), {}
-            num_smooth, num_used_prime, num_partial, num_poly, root_A = 0, 0, 0, 0, isqrt(root_2n / x_max)
+            num_smooth, num_used_prime, num_partial, num_poly, root_A = 0, 0, 0, 0, isqrt(root_2n // x_max)
             
             while num_smooth <= num_used_prime:
                 # find an integer value A such that:
@@ -474,7 +474,7 @@ def mpqs(n):
                 # this is unsolvable if n is not a quadratic residue mod sqrt(A)
                 b = mod_sqrt(n, root_A)
                 B = (b + (n - b*b) * modinv(b + b, root_A))%A
-                C = (B*B - n) / A        # B*B-A*C = n <=> C = (B*B-n)/A
+                C = (B*B - n) // A        # B*B-A*C = n <=> C = (B*B-n)/A
                 
                 num_poly += 1
                 
@@ -515,7 +515,7 @@ def mpqs(n):
                             while sieve_val%p == 0:
                                 if p in vec: sqr += [p] # track perfect sqr facs to avoid sqrting something huge at the end
                                 vec ^= {p}
-                                sieve_val = mpz(sieve_val / p)
+                                sieve_val = mpz(sieve_val // p)
                         if sieve_val == 1: # smooth
                             smooth += [(vec, (sqr, (A*x+B), root_A))]
                             used_prime |= vec
@@ -623,7 +623,7 @@ def primefac(n, trial_limit=1000, rho_rounds=42000, verbose=False,
         if n%p == 0:
             while n%p == 0:
                 yield p
-                n /= p
+                n = n//p
             nroot = isqrt(n)
             if isprime(n):
                 yield n
@@ -642,7 +642,7 @@ def primefac(n, trial_limit=1000, rho_rounds=42000, verbose=False,
             f = pollardRho_brent(n)
             if isprime(f): yield f
             else: factors.append(f)
-            n /= f
+            n = n//f
             if isprime(n): yield n
             else: factors.append(n)
         return
@@ -666,7 +666,7 @@ def primefac(n, trial_limit=1000, rho_rounds=42000, verbose=False,
             # We now have a nontrivial factor g of n.  If we took too long to get here, we're actually at the except statement.
             if isprime(g): yield g
             else: factors.append(g)
-            n /= g
+            n = n//g
             if isprime(n): yield n
             else: factors.append(n)
         except Exception: difficult.append(n) # Factoring n took too long.  We'll have multifactor chug on it.
@@ -678,7 +678,7 @@ def primefac(n, trial_limit=1000, rho_rounds=42000, verbose=False,
         f = multifactor(n, methods=methods, verbose=verbose)
         if isprime(f): yield f
         else: factors.append(f)
-        n /= f
+        n = n//f
         if isprime(n): yield n
         else: factors.append(n)
 
@@ -792,7 +792,7 @@ def rpn(instr):
             elif token == '-' : res = a  - b
             elif token == '*' : res = a  * b
             elif token == 'x' : res = a  * b
-            elif token == '/' : res = a  / b
+            elif token == '/' : res = a  // b
             elif token == '%' : res = a  % b
             elif token == '**': res = a ** b
             elif token == 'xx': res = a ** b
