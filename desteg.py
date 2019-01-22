@@ -68,39 +68,19 @@ def runlength(sequence):
         pass
     return lmax
 
-def runlist(sequence):
-    isq = iter(sequence)
-    try:
-        vcur = next(isq)
-    except StopIteration as si:
-        return 0
-    lcur = 1
-    lmax = 1
-    try:
-        while True:
-            vnxt = next(isq)
-            if vcur != vnxt:
-                yield lcur
-                lcur = 1
-                vcur = vnxt
-            else:
-                lcur += 1
-            if lcur > lmax:
-                lmax = lcur
-    except StopIteration as si:
-        pass
-    yield lcur
-
-rlim = list(runlist(imhsl))
-print("runlength max:", runlength(imhsl))
-print("runlength max:", max(rlim))
+import rle
+rlim, rlep = rle.extract(im.getdata())
+rlim = list(rlim)
+print("Lengths:", len(rlim), len(rlep))
+#print("runlength max:", runlength(imhsl))
+#print("runlength max:", max(rlim))
 #print(list(rlim))
-print("bin counting:",numpy.bincount(rlim))
+#print("bin counting:",numpy.bincount(rlim))
 import pprint
 pp = pprint.PrettyPrinter(indent=2).pprint
 nzb = [(i, e) for (i, e) in enumerate(numpy.bincount(rlim)) if e]
-print("nzb:")
-pp(nzb)
+#print("nzb:")
+#pp(nzb)
 
 print("Image size overall:",im.size)
 print("Number of runs overall:", len(rlim))
@@ -134,11 +114,19 @@ print(len(words))
 #print(ulens)
 #print(words[:15])
 #print(words[705:715])
-print("first ten runs:",rlim[:20:2])
+#print("first ten runs:",rlim[:20:2])
+print(rlim[:10],rlim[-10:])
+print("RLIM/word sizes:",len(rlim), len(words))
 mismatch = []
+for i in range(len(rlim)):
+    if rlim[i] != len(words[i]):
+        print(rlim[:10])
+        print(rlim[i], i, words[i])
+        break
+
 for i in range(1,len(rlim)):
     try:
-        if rlim[-2*i] != len(words[-i]):
+        if rlim[-i] != len(words[-i]):
             if len(mismatch) == 0:
                 print("mismatch: ",words[-i], len(words[-i]), rlim[-2*i])
                 print("context: ", rlim[-2*i - 14: -2*i+16:2])
@@ -152,17 +140,59 @@ for i in range(1,len(rlim)):
         break
 print (mismatch[10::-1])
 print ("mismatch len:",len(mismatch))
-print("MATCH FRACTION: {0:.1f}%".format(100.*(len(rlim)*.5 - len(mismatch)) / len(rlim)))
+print("MATCH FRACTION: {0:.1f}%".format(100.*(len(rlim) - len(mismatch)) / len(rlim)))
 if len(mismatch) == 0:
-    mismatch.append([0,])
+    mismatch.append([len(rlim),])
 print("MATCH FRACTION: {0:.1f}%".format(100.*(mismatch[0][0]) / len(rlim)))
 print (mismatch[-10:])
 
+level_rcs = [0]
+letters = []
+awesome_zs = []
+for level in range(1,256):
+    # extract word elements by level and combine.
+    print("Level:",level)
+    print("qty:",len(rlep[level]))
+    for (w, c) in rlep[level]:
+        if c > len(words[w]):
+                break
+    ltext = "".join([words[w][c] for (w,c) in rlep[level]])
+    lt = [0] * len(ltext)
+    lrt = rle.thist(ltext)
+    lrt = list(lrt)
+    level_rcs.append(len(lrt))
+    for i in range(len(ltext)):
+        if ltext[i].isupper():
+            lt[i] = 'X'
+        else:
+            lt[i] = '.'
+    if len(ltext) > 0:
+        letters.append(ltext[0])
+    if 'z' in ltext:
+        awesome_zs.extend(ltext)
+    ltext = ''.join(lt)
+    print("LT:",ltext)
+
+    print("	",lrt)
+    # show each image as it slides around.
 
 
-# find all cases in which an odd numbered item isn't 1.
-anomalies = [(idx, val) for (idx, val) in enumerate(rlim[::1]) if (idx % 2) and (val != 1)]
-print(anomalies[:40])
+print("LETTERS:", ''.join(letters))
+
+pp(list(enumerate( level_rcs)))
+le = list(enumerate( level_rcs))
+le.sort(key=lambda x: x[1])
+pp(le)
+print(''.join(awesome_zs))
+print(list(rle.thist(''.join(awesome_zs))))
+print(list(primefac.primefac(len(awesome_zs))))
+
+# need the original image levels for a 29x37 image made of the pixels which related to 'z' or 'Z'.
+zima = numpy.zeros(29*37,dtype='uint8')
+rle.nab_pixels(im, words, zima)
+zimg = Image.fromarray(zima.reshape((29,37)))
+zimg.show()
+
 sys.exit(0)
 
 print('raw image values, first 32',numpy.array(im)[0,:32])
