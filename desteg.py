@@ -189,8 +189,9 @@ print(list(primefac.primefac(len(awesome_zs))))
 
 # need the original image levels for a 29x37 image made of the pixels which related to 'z' or 'Z'.
 zima = numpy.zeros(29*37,dtype='uint8')
-rle.nab_pixels(im, words, zima)
-zimg = Image.fromarray(zima.reshape((29,37)))
+np = rle.nab_pixels(im.getdata(), words, zima)
+print("nabbed:",len(list(np)))
+zimg = Image.fromarray(zima.reshape((37,29)))
 zimg.show()
 
 sys.exit(0)

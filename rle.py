@@ -29,7 +29,7 @@ def runlist(sequence, eps):
 
 def nab_pixels(img, wvec, resarr):
     oidx = 0
-    isq = iter(sequence)
+    isq = iter(img)
     lcur = 0
     widx = 0
     while True:
@@ -40,9 +40,9 @@ def nab_pixels(img, wvec, resarr):
             lcur = 0
             widx += 1
         else:
-            char = words[widx][lcur]
+            char = wvec[widx][lcur]
             if char == 'z' or char == 'Z':
-                resarr[oidx] = vcur
+                resarr[oidx] = vnxt
                 oidx += 1
             #eps[vnxt].append((widx, lcur))
             lcur += 1
